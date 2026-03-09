@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carbon Footprint Scope 2</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Kanit', sans-serif; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-t from-emerald-100 to-white text-slate-900 flex flex-col">
+
+    <!-- Navigation -->
+    <nav class="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-slate-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-20 items-center">
+                <div class="flex items-center gap-2">
+                    <button onclick="history.back()" class="p-2 rounded-full hover:bg-slate-100 text-slate-500 hover:text-emerald-800 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500" aria-label="Go back">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M19 12H5"/>
+                            <path d="M12 19l-7-7 7-7"/>
+                        </svg>
+                    </button>
+                    <span class="text-2xl font-bold tracking-tight text-emerald-800">Carbon Footprint for organization</span>
+                </div>
+                <div class="hidden md:flex items-center gap-6">
+                    <a href="index.html" class="text-slate-600 hover:text-emerald-600 transition-colors">หน้าแรก</a>
+                    <a href="emission_factors.html" class="text-slate-600 hover:text-emerald-600 transition-colors">Emission factors</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-5xl mx-auto px-4 py-8 md:py-12 w-full">
+        
+        <div id="landing-view">
+            <div class="mb-12">
+                <h1 class="text-3xl md:text-4xl font-extrabold text-slate-900 mb-4">
+                    บันทึกข้อมูลการปล่อยก๊าซเรือนกระจก Scope 2
+                </h1>
+            </div>
+
+            <!-- Selection Grid --> 
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 auto-rows-fr">
+                <!-- Electricity Card -->
+                <button onclick="window.location.href='form_scope2_electric.html'" class="flex items-start h-full p-6 text-left rounded-2xl border-2 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group border-amber-200 bg-amber-50 shadow-sm">
+                    <div class="mr-5 p-4 bg-white rounded-xl shadow-sm group-hover:scale-110 transition-transform duration-300">
+                        <i data-lucide="zap" class="w-8 h-8 text-amber-500"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="text-xl font-bold mb-2 group-hover:text-emerald-700 transition-colors">ไฟฟ้า</h3>
+                        <p class="text-slate-500 text-sm leading-relaxed mb-4">บันทึกปริมาณการใช้ไฟฟ้าที่ซื้อจาก กฟน. กฟภ. หรือแหล่งอื่นๆ</p>
+                        <div class="flex items-center text-sm font-bold text-emerald-600">
+                            กดเพื่อบันทึกข้อมูล
+                            <i data-lucide="chevron-right" class="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform"></i>
+                        </div>
+                    </div>
+                </button>
+
+                <!-- Steam Card -->
+                <button onclick="window.location.href='form_steam.html'" class="flex items-start h-full p-6 text-left rounded-2xl border-2 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group border-slate-200 bg-slate-100 shadow-sm">
+                    <div class="mr-5 p-4 bg-white rounded-xl shadow-sm group-hover:scale-110 transition-transform duration-300">
+                        <i data-lucide="cloud-fog" class="w-8 h-8 text-slate-500"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="text-xl font-bold mb-2 group-hover:text-emerald-700 transition-colors">ไอน้ำ</h3>
+                        <p class="text-slate-500 text-sm leading-relaxed mb-4">บันทึกการซื้อไอน้ำเพื่อใช้ในกระบวนการผลิตหรือทำความร้อน</p>
+                        <div class="flex items-center text-sm font-bold text-emerald-600">
+                            กดเพื่อบันทึกข้อมูล
+                            <i data-lucide="chevron-right" class="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform"></i>
+                        </div>
+                    </div>
+                </button>
+
+                <!-- Heat Card -->
+                <button onclick="window.location.href='form_heat.html'" class="flex items-start h-full p-6 text-left rounded-2xl border-2 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group border-orange-200 bg-orange-50 shadow-sm">
+                    <div class="mr-5 p-4 bg-white rounded-xl shadow-sm group-hover:scale-110 transition-transform duration-300">
+                        <i data-lucide="thermometer-sun" class="w-8 h-8 text-orange-500"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="text-xl font-bold mb-2 group-hover:text-emerald-700 transition-colors">ความร้อน</h3>
+                        <p class="text-slate-500 text-sm leading-relaxed mb-4">บันทึกการรับพลังงานความร้อนจากแหล่งภายนอก</p>
+                        <div class="flex items-center text-sm font-bold text-emerald-600">
+                            กดเพื่อบันทึกข้อมูล
+                            <i data-lucide="chevron-right" class="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform"></i>
+                        </div>
+                    </div>
+                </button>
+
+                <!-- Cooling Card -->
+                <button onclick="window.location.href='form_cooling.html'" class="flex items-start h-full p-6 text-left rounded-2xl border-2 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group border-blue-200 bg-blue-50 shadow-sm">
+                    <div class="mr-5 p-4 bg-white rounded-xl shadow-sm group-hover:scale-110 transition-transform duration-300">
+                        <i data-lucide="snowflake" class="w-8 h-8 text-blue-400"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="text-xl font-bold mb-2 group-hover:text-emerald-700 transition-colors">ความเย็น</h3>
+                        <p class="text-slate-500 text-sm leading-relaxed mb-4">บันทึกการซื้อพลังงานความเย็น หรือน้ำเย็นจากระบบส่วนกลาง</p>
+                        <div class="flex items-center text-sm font-bold text-emerald-600">
+                            กดเพื่อบันทึกข้อมูล
+                            <i data-lucide="chevron-right" class="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform"></i>
+                        </div>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-slate-400 py-12 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p class="mb-4">Created by Mr.Kasama Krueapueng</p>
+            <div class="flex justify-center gap-6 text-sm">
+                <a href="#" class="hover:text-white transition-colors">Maejo University</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Data object updated for Scope 2
+        const scope2Data = {
+            'electricity': {
+                title: 'ไฟฟ้า (Purchased Electricity)',
+                desc: 'บันทึกปริมาณการใช้ไฟฟ้า (kWh)',
+                icon: 'zap',
+                colorClass: 'bg-amber-50',
+                iconColor: 'text-amber-500'
+            },
+            'steam': {
+                title: 'ไอน้ำ (Purchased Steam)',
+                desc: 'บันทึกปริมาณไอน้ำที่ใช้งาน',
+                icon: 'cloud-fog',
+                colorClass: 'bg-slate-50',
+                iconColor: 'text-slate-500'
+            },
+            'heat': {
+                title: 'พลังงานความร้อน (Purchased Heat)',
+                desc: 'บันทึกปริมาณความร้อนที่รับเข้ามา',
+                icon: 'thermometer-sun',
+                colorClass: 'bg-orange-50',
+                iconColor: 'text-orange-500'
+            },
+            'cooling': {
+                title: 'พลังงานความเย็น (Purchased Cooling)',
+                desc: 'บันทึกปริมาณน้ำเย็นหรือความเย็นที่ใช้',
+                icon: 'snowflake',
+                colorClass: 'bg-blue-50',
+                iconColor: 'text-blue-400'
+            }
+        };
+    </script>
+</body>
+</html>

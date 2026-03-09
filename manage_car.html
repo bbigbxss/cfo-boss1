@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบจัดการข้อมูลรถยนต์</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Supabase JS Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Sarabun', sans-serif; }
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+    <nav class="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-slate-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-20 items-center">
+                <div class="flex items-center gap-2">
+                    <button onclick="history.back()" class="p-2 rounded-full hover:bg-slate-100 text-slate-500 hover:text-emerald-800 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500" aria-label="Go back">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M19 12H5"/>
+                            <path d="M12 19l-7-7 7-7"/>
+                        </svg>
+                    </button>
+                    <span class="text-2xl font-bold tracking-tight text-emerald-800">Carbon Footprint for Organization</span>
+                </div>
+                <div class="hidden md:flex items-center gap-6">
+                    <a href="view_car.html" class="bg-emerald-100 text-emerald-700 px-4 py-2 rounded-lg font-bold hover:bg-emerald-200 transition-colors">📊 ดูประวัติการบันทึก</a>
+                    <a href="index.html" class="text-slate-600 hover:text-emerald-600 transition-colors">หน้าแรก</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-6xl mx-auto p-4 md:p-8">
+        
+        <!-- Header -->
+        <div class="flex items-center gap-3 mb-8">
+            <div class="bg-emerald-600 p-3 rounded-xl">
+                <i data-lucide="car" class="text-white w-8 h-8"></i>
+            </div>
+            <div>
+                <h1 class="text-2xl font-bold text-gray-800">จัดการข้อมูลรถยนต์</h1>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <!-- Add Data Form -->
+            <div class="lg:col-span-1 ">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 sticky top-28">
+                    <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                        <i data-lucide="plus-circle" class="w-5 h-5 text-emerald-600 "></i>
+                        เพิ่มข้อมูลรถใหม่
+                    </h2>
+                    <form id="carForm" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">ทะเบียนรถ</label>
+                            <input required type="text" id="car_registration" name="car_registration"
+                                class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-600 outline-none transition-all"
+                                placeholder="เช่น กข 1234">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">ยี่ห้อ</label>
+                                <input required type="text" id="brand" name="brand"
+                                    class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-600 outline-none"placeholder="เช่น Toyota">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">หมายเลขบัตร Fleet</label>
+                                <input required type="text" id="fleet" name="fleet"
+                                    class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-600 outline-none" placeholder="5043 - 6770 - ...">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">ประเภทรถ</label>
+                            <input required type="text" id="car_type" name="car_type"
+                                class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-600 outline-none" placeholder="เช่น เก๋ง">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">ประเภทเชื้อเพลิง</label>
+                            <input required type="text" id="fuel_type" name="fuel_type"
+                                class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-600 outline-none" placeholder="เช่น ดีเซล">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">หน่วยงาน</label>
+                            <input required type="text" id="agencies" name="agencies"
+                                class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-600 outline-none"placeholder="เช่น Implement">
+                        </div>
+                        <button type="submit" id="submitBtn"
+                            class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-lg shadow-md transition-colors flex justify-center items-center gap-2">
+                            <span>บันทึกข้อมูล</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Data Table -->
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div class="p-6 border-b border-gray-100 flex justify-between items-center">
+                        <h2 class="text-lg font-semibold text-emerald-600 ">รายการรถทั้งหมด <span id="carCount" class="text-emerald-600 ">(0)</span></h2>
+                        <button onclick="fetchCars()" class="text-emerald-600  hover:emerald-600  text-sm font-medium flex items-center gap-1">
+                            <i data-lucide="refresh-cw" class="w-4 h-4"></i> รีเฟรช
+                        </button>
+                    </div>
+
+                    <div id="tableContainer" class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-gray-50 text-gray-600 text-sm uppercase font-semibold">
+                                <tr>
+                                    <th class="px-6 py-4">ทะเบียนรถ</th>
+                                    <th class="px-6 py-4">ยี่ห้อ / fleet</th>
+                                    <th class="px-6 py-4">ประเภท / เชื้อเพลิง</th>
+                                    <th class="px-6 py-4">หน่วยงาน</th>
+                                    <th class="px-6 py-4 text-center">จัดการ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="carTableBody" class="divide-y divide-gray-100">
+                                <!-- Data will be inserted here -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Status Indicator -->
+                    <div id="statusMessage" class="hidden py-20 text-center flex flex-col items-center">
+                        <div class="loading-spinner mb-4" id="tableLoader"></div>
+                        <p id="statusText" class="text-gray-500">กำลังดำเนินการ...</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Custom Modal for Alerts -->
+    <div id="modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl p-8 max-w-sm w-full shadow-2xl text-center">
+            <div id="modalIcon" class="mx-auto mb-4 w-16 h-16 rounded-full flex items-center justify-center">
+                <!-- Icon will be inserted by JS -->
+            </div>
+            <h3 id="modalTitle" class="text-xl font-bold mb-2">แจ้งเตือน</h3>
+            <p id="modalMessage" class="text-gray-600 mb-6"></p>
+            <div class="flex flex-col gap-2" id="modalButtons">
+                <button onclick="closeModal()" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">ปิด</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Supabase Configuration
+        const supabaseUrl = "https://ufglhklqraqudlxkylzw.supabase.co";
+        const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmZ2xoa2xxcmFxdWRseGt5bHp3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY5NTY2MzUsImV4cCI6MjA4MjUzMjYzNX0._WxWgfvgonGFmQlXfLOSuKH4QqS6sWF3GOxnNPW6si8";
+        const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+        // Elements
+        const carForm = document.getElementById('carForm');
+        const carTableBody = document.getElementById('carTableBody');
+        const carCount = document.getElementById('carCount');
+        const statusMessage = document.getElementById('statusMessage');
+        const statusText = document.getElementById('statusText');
+        const tableContainer = document.getElementById('tableContainer');
+        const submitBtn = document.getElementById('submitBtn');
+
+        // Functions
+        async function fetchCars() {
+            showLoading(true);
+            const { data, error } = await _supabase
+                .from('data_scope1_car')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            showLoading(false);
+            
+            if (error) {
+                showAlert("เกิดข้อผิดพลาด", error.message, "error");
+                return;
+            }
+
+            renderTable(data);
+        }
+
+        function renderTable(cars) {
+            carCount.innerText = `(${cars.length})`;
+            
+            if (cars.length === 0) {
+                tableContainer.classList.add('hidden');
+                statusMessage.classList.remove('hidden');
+                document.getElementById('tableLoader').classList.add('hidden');
+                statusText.innerText = "ไม่พบข้อมูลในระบบ";
+                return;
+            }
+
+            tableContainer.classList.remove('hidden');
+            statusMessage.classList.add('hidden');
+            
+            carTableBody.innerHTML = cars.map(car => `
+                <tr class="hover:bg-blue-50/30 transition-colors group">
+                    <td class="px-6 py-rose
+                        <span class="font-bold text-gray-800">${car.car_registration}</span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="text-gray-700 font-medium">${car.brand}</div>
+                        <div class="text-xs text-gray-500">${car.fleet}</div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="text-gray-700">${car.car_type}</div>
+                        <div class="text-xs px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-full inline-block mt-1">
+                            ${car.fuel_type}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-gray-600 text-sm">
+                        ${car.agencies}
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <button onclick="deleteCar('${car.car_registration}')" 
+                            class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all">
+                            <i data-lucide="trash-2" class="w-5 h-5"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+            
+            lucide.createIcons();
+        }
+
+        async function addCar(e) {
+            e.preventDefault();
+            const formData = new FormData(carForm);
+            const carData = Object.fromEntries(formData.entries());
+
+            setSubmitting(true);
+            const { error } = await _supabase
+                .from('data_scope1_car')
+                .insert([carData]);
+
+            setSubmitting(false);
+
+            if (error) {
+                showAlert("ไม่สามารถเพิ่มข้อมูลได้", error.message, "error");
+            } else {
+                carForm.reset();
+                fetchCars();
+                showAlert("สำเร็จ!", "บันทึกข้อมูลรถยนต์เรียบร้อยแล้ว", "success");
+            }
+        }
+
+        async function deleteCar(registration) {
+            confirmAction(`คุณแน่ใจหรือไม่ว่าต้องการลบรถทะเบียน ${registration} ใช่หรือไม่?`, async () => {
+                const { error } = await _supabase
+                    .from('data_scope1_car')
+                    .delete()
+                    .eq('car_registration', registration);
+
+                if (error) {
+                    showAlert("เกิดข้อผิดพลาดในการลบ", error.message, "error");
+                } else {
+                    fetchCars();
+                    showAlert("ลบข้อมูลสำเร็จ", `ลบข้อมูลรถทะเบียน ${registration} ออกจากระบบแล้ว`, "success");
+                }
+            });
+        }
+
+        // Helpers
+        function showLoading(isLoading) {
+            if (isLoading) {
+                tableContainer.classList.add('opacity-50');
+                statusMessage.classList.remove('hidden');
+                document.getElementById('tableLoader').classList.remove('hidden');
+                statusText.innerText = "กำลังดึงข้อมูล...";
+            } else {
+                tableContainer.classList.remove('opacity-50');
+                statusMessage.classList.add('hidden');
+            }
+        }
+
+        function setSubmitting(isSubmitting) {
+            submitBtn.disabled = isSubmitting;
+            submitBtn.innerHTML = isSubmitting 
+                ? `<div class="loading-spinner" style="width:20px; height:20px; border-top-color: white;"></div> <span>กำลังบันทึก...</span>`
+                : `<span>บันทึกข้อมูล</span>`;
+        }
+
+        function showAlert(title, msg, type = "info") {
+            const iconEl = document.getElementById('modalIcon');
+            if (type === "success") {
+                iconEl.className = "mx-auto mb-4 bg-emerald-100 text-emerald-600 w-16 h-16 rounded-full flex items-center justify-center";
+                iconEl.innerHTML = `<i data-lucide="check-circle" class="w-8 h-8"></i>`;
+            } else if (type === "error") {
+                iconEl.className = "mx-auto mb-4 bg-red-100 text-red-600 w-16 h-16 rounded-full flex items-center justify-center";
+                iconEl.innerHTML = `<i data-lucide="alert-triangle" class="w-8 h-8"></i>`;
+            } else {
+                iconEl.className = "mx-auto mb-4 bg-blue-100 text-blue-600 w-16 h-16 rounded-full flex items-center justify-center";
+                iconEl.innerHTML = `<i data-lucide="info" class="w-8 h-8"></i>`;
+            }
+
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalMessage').innerText = msg;
+            document.getElementById('modalButtons').innerHTML = `
+                <button onclick="closeModal()" class="w-full px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors">ตกลง</button>
+            `;
+            document.getElementById('modal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function confirmAction(msg, onConfirm) {
+            document.getElementById('modalIcon').className = "mx-auto mb-4 bg-rose-100 text-rose-600 w-16 h-16 rounded-full flex items-center justify-center";
+            document.getElementById('modalIcon').innerHTML = `<i data-lucide="trash-2" class="w-8 h-8"></i>`;
+            document.getElementById('modalTitle').innerText = "ยืนยันการลบ";
+            document.getElementById('modalMessage').innerText = msg;
+            document.getElementById('modalButtons').innerHTML = `
+                <button onclick="closeModal()" class="w-full px-6 py-3 bg-gray-100 text-gray-600 rounded-xl font-bold hover:bg-gray-200 transition-colors">ยกเลิก</button>
+                <button id="confirmBtn" class="w-full px-6 py-3 bg-rose-600 text-white rounded-xl font-bold hover:bg-rose-700 transition-colors">ลบข้อมูลทันที</button>
+            `;
+            document.getElementById('modal').classList.remove('hidden');
+            document.getElementById('confirmBtn').onclick = () => {
+                closeModal();
+                onConfirm();
+            };
+            lucide.createIcons();
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.add('hidden');
+        }
+
+        // Init
+        carForm.onsubmit = addCar;
+        window.onload = () => {
+            lucide.createIcons();
+            fetchCars();
+        };
+    </script>
+</body>
+</html>

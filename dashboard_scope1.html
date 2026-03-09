@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scope 1 Carbon Footprint Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap');
+        body { font-family: 'Kanit', sans-serif; }
+        .chart-container { position: relative; height: 350px; width: 100%; }
+    </style>
+</head>
+<body class="bg-gradient-to-b from-emerald-200 to-teal-200 min-h-screen">
+
+    <!-- Header -->
+    <nav class="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-emerald-100 mb-3">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-20 items-center">
+                <div class="flex items-center gap-3">
+                    <button onclick="history.back()" class="p-2 rounded-full hover:bg-emerald-50 text-slate-500 hover:text-emerald-800 transition-all duration-200 focus:outline-none">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/>
+                        </svg>
+                    </button>
+                    <span class="text-xl md:text-2xl font-bold tracking-tight text-emerald-800">CFO Dashboard (Scope 1)</span>
+                </div>
+                <div class="hidden md:flex items-center gap-6">
+                    <a href="index.html" class="text-slate-600 hover:text-emerald-600 font-medium transition-colors">หน้าแรก</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-4 pb-20">
+        
+        <!-- Summary Counters -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+            <!-- Air Card -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border-t-4 border-sky-500 transition hover:shadow-md">
+                <div class="flex justify-between items-start mb-2">
+                    <span class="text-gray-500 font-medium">เครื่องปรับอากาศ</span>
+                    <span class="p-2 bg-sky-50 text-sky-600 rounded-lg text-xs">Air</span>
+                </div>
+                <h3 id="total-air" class="text-3xl font-bold text-gray-800">0.00</h3>
+                <p class="text-xs text-gray-400 mt-1 uppercase tracking-wider">Refill Qty (kg)</p>
+            </div>
+            <!-- Generator Card -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border-t-4 border-amber-500 transition hover:shadow-md">
+                <div class="flex justify-between items-start mb-2">
+                    <span class="text-gray-500 font-medium">เครื่องปั่นไฟ</span>
+                    <span class="p-2 bg-amber-50 text-amber-600 rounded-lg text-xs">Generator</span>
+                </div>
+                <h3 id="total-generator" class="text-3xl font-bold text-gray-800">0.00</h3>
+                <p class="text-xs text-gray-400 mt-1 uppercase tracking-wider">Total CO2 (kgCO2e)</p>
+            </div>
+            <!-- Fire Card -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border-t-4 border-rose-500 transition hover:shadow-md">
+                <div class="flex justify-between items-start mb-2">
+                    <span class="text-gray-500 font-medium">อุปกรณ์ดับเพลิง</span>
+                    <span class="p-2 bg-rose-50 text-rose-600 rounded-lg text-xs">Fire</span>
+                </div>
+                <h3 id="total-fire" class="text-3xl font-bold text-gray-800">0.00</h3>
+                <p class="text-xs text-gray-400 mt-1 uppercase tracking-wider">Total CO2 (kgCO2e)</p>
+            </div>
+            <!-- Car Card -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border-t-4 border-indigo-500 transition hover:shadow-md">
+                <div class="flex justify-between items-start mb-2">
+                    <span class="text-gray-500 font-medium">ยานพาหนะ</span>
+                    <span class="p-2 bg-indigo-50 text-indigo-600 rounded-lg text-xs">Car</span>
+                </div>
+                <h3 id="total-car" class="text-3xl font-bold text-gray-800">0.00</h3>
+                <p class="text-xs text-gray-400 mt-1 uppercase tracking-wider">Total CO2 (kgCO2e)</p>
+            </div>
+        </div>
+
+        <!-- Charts Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            
+            <!-- Air Chart -->
+            <div class="bg-white p-6 rounded-3xl shadow-md border border-gray-100">
+                <div class="mb-6">
+                    <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+                        <span class="w-3 h-3 bg-sky-500 rounded-full"></span>
+                        ปริมาณการเติมน้ำยาแอร์แยกตามเดือน
+                    </h2>
+                    <p class="text-sm text-gray-400 italic">ตาราง: scope1_air (Refill Qty)</p>
+                </div>
+                <div class="chart-container">
+                    <canvas id="airChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Generator Chart -->
+            <div class="bg-white p-6 rounded-3xl shadow-md border border-gray-100">
+                <div class="mb-6">
+                    <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+                        <span class="w-3 h-3 bg-amber-500 rounded-full"></span>
+                        การปลดปล่อย CO2 จากเครื่องปั่นไฟ
+                    </h2>
+                    <p class="text-sm text-gray-400 italic">ตาราง: scope1_generator (Total CO2)</p>
+                </div>
+                <div class="chart-container">
+                    <canvas id="generatorChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Fire Chart -->
+            <div class="bg-white p-6 rounded-3xl shadow-md border border-gray-100">
+                <div class="mb-6">
+                    <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+                        <span class="w-3 h-3 bg-rose-500 rounded-full"></span>
+                        การปลดปล่อย CO2 จากอุปกรณ์ดับเพลิง
+                    </h2>
+                    <p class="text-sm text-gray-400 italic">ตาราง: scope1_fire (Total CO2)</p>
+                </div>
+                <div class="chart-container">
+                    <canvas id="fireChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Car Chart -->
+            <div class="bg-white p-6 rounded-3xl shadow-md border border-gray-100">
+                <div class="mb-6">
+                    <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+                        <span class="w-3 h-3 bg-indigo-500 rounded-full"></span>
+                        การปลดปล่อย CO2 จากยานพาหนะแยกตามหน่วยงาน
+                    </h2>
+                    <p class="text-sm text-gray-400 italic">ตาราง: scope1_car (Total CO2 by Agency)</p>
+                </div>
+                <div class="chart-container">
+                    <canvas id="carChart"></canvas>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = "https://ufglhklqraqudlxkylzw.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmZ2xoa2xxcmFxdWRseGt5bHp3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY5NTY2MzUsImV4cCI6MjA4MjUzMjYzNX0._WxWgfvgonGFmQlXfLOSuKH4QqS6sWF3GOxnNPW6si8";
+        
+        // แก้ไขปัญหามีการประกาศตัวแปรซ้ำ โดยใช้ window.supabase และเปลี่ยนชื่อตัวแปร
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // ฟังก์ชันช่วยจัดหมวดหมู่ข้อมูลตามเดือน
+        const groupByMonth = (data, valueField, monthField = 'month') => {
+            const months = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+            const grouped = {};
+            
+            // Initialize months
+            months.forEach(m => grouped[m] = 0);
+
+            data.forEach(item => {
+                let mIndex = -1;
+                const mValue = String(item[monthField] || '').toLowerCase();
+                
+                // ค้นหาเดือนจากชื่อ (รองรับภาษาไทย/อังกฤษเบื้องต้น)
+                if(mValue.includes('jan') || mValue.includes('มกรา')) mIndex = 0;
+                else if(mValue.includes('feb') || mValue.includes('กุมภา')) mIndex = 1;
+                else if(mValue.includes('mar') || mValue.includes('มีนา')) mIndex = 2;
+                else if(mValue.includes('apr') || mValue.includes('เมษา')) mIndex = 3;
+                else if(mValue.includes('may') || mValue.includes('พฤษภา')) mIndex = 4;
+                else if(mValue.includes('jun') || mValue.includes('มิถุนา')) mIndex = 5;
+                else if(mValue.includes('jul') || mValue.includes('กรกฎา')) mIndex = 6;
+                else if(mValue.includes('aug') || mValue.includes('สิงหา')) mIndex = 7;
+                else if(mValue.includes('sep') || mValue.includes('กันยา')) mIndex = 8;
+                else if(mValue.includes('oct') || mValue.includes('ตุลา')) mIndex = 9;
+                else if(mValue.includes('nov') || mValue.includes('พฤศจิกา')) mIndex = 10;
+                else if(mValue.includes('dec') || mValue.includes('ธันวา')) mIndex = 11;
+                
+                if(mIndex !== -1) {
+                    grouped[months[mIndex]] += parseFloat(item[valueField] || 0);
+                }
+            });
+
+            return {
+                labels: Object.keys(grouped),
+                values: Object.values(grouped)
+            };
+        };
+
+        const createChart = (id, type, label, dataObj, color) => {
+            const ctx = document.getElementById(id).getContext('2d');
+            return new Chart(ctx, {
+                type: type,
+                data: {
+                    labels: dataObj.labels,
+                    datasets: [{
+                        label: label,
+                        data: dataObj.values,
+                        backgroundColor: type === 'bar' ? color : color + '33',
+                        borderColor: color,
+                        borderWidth: 2,
+                        borderRadius: 5,
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { font: { family: 'Kanit' } } }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        };
+
+        async function initDashboard() {
+            try {
+                const results = await Promise.all([
+                    supabaseClient.from('scope1_air').select('*'),
+                    supabaseClient.from('scope1_generator').select('*'),
+                    supabaseClient.from('scope1_fire').select('*'),
+                    supabaseClient.from('scope1_car').select('*')
+                ]);
+
+                const [air, gen, fire, car] = results;
+
+                if (air.error || gen.error || fire.error || car.error) throw new Error("Fetch Failed");
+
+                // --- 1. AIR ---
+                const airData = groupByMonth(air.data, 'refill_qty', 'month');
+                const totalAirQty = air.data.reduce((sum, item) => sum + parseFloat(item.refill_qty || 0), 0);
+                document.getElementById('total-air').innerText = totalAirQty.toLocaleString(undefined, {minimumFractionDigits: 2});
+                createChart('airChart', 'doughnut', 'ปริมาณการเติม (kg)', airData, '#0ea5e9');
+
+                // --- 2. GENERATOR ---
+                const genData = groupByMonth(gen.data, 'total_co2', 'month_fill');
+                const totalGenCO2 = gen.data.reduce((sum, item) => sum + parseFloat(item.total_co2 || 0), 0);
+                document.getElementById('total-generator').innerText = totalGenCO2.toLocaleString(undefined, {minimumFractionDigits: 2});
+                createChart('generatorChart', 'line', 'CO2 (kgCO2e)', genData, '#f59e0b');
+
+                // --- 3. FIRE ---
+                const fireData = groupByMonth(fire.data, 'total_ef', 'month');
+                const totalFireCO2 = fire.data.reduce((sum, item) => sum + parseFloat(item.total_ef || 0), 0);
+                document.getElementById('total-fire').innerText = totalFireCO2.toLocaleString(undefined, {minimumFractionDigits: 2});
+                createChart('fireChart', 'bar', 'CO2 (kgCO2e)', fireData, '#f43f5e');
+
+                // --- 4. CAR (Group by Agencies) ---
+                const carGroupedByAgency = {};
+                car.data.forEach(item => {
+                    const agency = item.agencies || 'ไม่ระบุ';
+                    carGroupedByAgency[agency] = (carGroupedByAgency[agency] || 0) + parseFloat(item.total_co2 || 0);
+                });
+                const carChartData = {
+                    labels: Object.keys(carGroupedByAgency),
+                    values: Object.values(carGroupedByAgency)
+                };
+                const totalCarCO2 = car.data.reduce((sum, item) => sum + parseFloat(item.total_co2 || 0), 0);
+                document.getElementById('total-car').innerText = totalCarCO2.toLocaleString(undefined, {minimumFractionDigits: 2});
+                createChart('carChart', 'pie', 'CO2 แยกตามหน่วยงาน', carChartData, '#6366f1');
+
+                // Update Status
+                document.getElementById('status-text').innerText = "เชื่อมต่อและอัปเดตข้อมูลแล้ว";
+                document.getElementById('status-tag').classList.replace('bg-emerald-900/50', 'bg-emerald-600/20');
+                document.getElementById('status-tag').classList.add('text-emerald-400');
+
+            } catch (err) {
+                console.error(err);
+                document.getElementById('status-text').innerText = "เกิดข้อผิดพลาดในการโหลดข้อมูล";
+            }
+        }
+
+        window.onload = initDashboard;
+    </script>
+</body>
+</html>

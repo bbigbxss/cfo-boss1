@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบจัดการข้อมูลถังดับเพลิง</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Supabase JS Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Sarabun', sans-serif; }
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #5bb06f; /* Red for fire theme */
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+    <!-- Navigation -->
+    <nav class="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-slate-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-20 items-center">
+                <div class="flex items-center gap-2">
+                    <button onclick="history.back()" class="p-2 rounded-full hover:bg-slate-100 text-slate-500 hover:text-emerald-800 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500" aria-label="Go back">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M19 12H5"/>
+                            <path d="M12 19l-7-7 7-7"/>
+                        </svg>
+                    </button>
+                    <span class="text-2xl font-bold tracking-tight text-emerald-800">Carbon Footprint for Organization</span>
+                </div>
+                <div class="hidden md:flex items-center gap-6">
+                    <a href="view_fire.html" class="bg-emerald-100 text-emerald-700 px-4 py-2 rounded-lg font-bold hover:bg-emerald-200 transition-colors">📊 ดูประวัติการบันทึก</a>
+                    <a href="index.html" class="text-slate-600 hover:text-emerald-600 transition-colors">หน้าแรก</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+
+    <div class="max-w-7xl mx-auto p-4 md:p-8">
+        
+        <!-- Header -->
+        <div class="flex items-center gap-3 mb-8">
+            <div class="bg-emerald-600 p-3 rounded-xl shadow-lg">
+                <i data-lucide="shield-alert" class="text-white w-8 h-8"></i>
+            </div>
+            <div>
+                <h1 class="text-2xl font-bold text-emerald-600">จัดการข้อมูลถังดับเพลิง</h1>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            
+            <!-- Add Data Form -->
+            <div class="lg:col-span-4">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 sticky top-28">
+                    <h2 class="text-lg font-semibold mb-5 flex items-center gap-2 text-emerald-600">
+                        <i data-lucide="plus-circle" class="w-5 h-5"></i>
+                        เพิ่มรายการถังดับเพลิง
+                    </h2>
+                    <form id="fireExtinguisherForm" class="space-y-4">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">ชั้น</label>
+                                <input required type="text" name="floor" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-600 outline-none transition-all" placeholder="เช่น 7">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">จำนวนถัง</label>
+                                <input required type="number" name="quantity" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-600 outline-none" placeholder="เช่น 1">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">บริเวณที่ติดตั้ง</label>
+                            <input required type="text" name="location" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-600 outline-none" placeholder="เช่น 63-Front Sever Room">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">ชนิดถังดับเพลิง</label>
+                            <input required type="text" name="fire_type" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-600 outline-none" placeholder="เช่น BF 2000">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">ขนาด (lbs)</label>
+                            <input required type="number" step="0.01" name="size" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-600 outline-none" placeholder="เช่น 10 หรือ 15">
+                        </div>
+
+                        <button type="submit" id="submitBtn"
+                            class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl shadow-md transition-all flex justify-center items-center gap-2 mt-2">
+                            <span>บันทึกข้อมูล</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Data Table -->
+            <div class="lg:col-span-8">
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-white">
+                        <div>
+                            <h2 class="text-lg font-bold text-gray-800">รายการถังดับเพลิงทั้งหมด</h2>
+                            <p class="text-xs text-gray-500">รวมทั้งสิ้น <span id="itemCount" class="font-bold text-emerald-600">0</span> รายการ</p>
+                        </div>
+                        <button onclick="fetchData()" class="text-emerald-600 p-2 rounded-lg transition-all flex items-center gap-1">
+                            <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                            <span class="text-sm font-bold">รีเฟรช</span>
+                        </button>
+                    </div>
+
+                    <div id="tableContainer" class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse min-w-[800px]">
+                            <thead class="bg-gray-50/50 text-gray-400 text-[10px] uppercase tracking-wider font-bold border-b border-gray-100">
+                                <tr>
+                                    <th class="px-6 py-4">ชั้น / บริเวณที่ติดตั้ง</th>
+                                    <th class="px-6 py-4">ชนิดถังดับเพลิง</th>
+                                    <th class="px-6 py-4 text-center">ขนาด (lbs)</th>
+                                    <th class="px-6 py-4 text-center">จำนวน (ถัง)</th>
+                                    <th class="px-6 py-4 text-center">จัดการ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dataTableBody" class="divide-y divide-gray-50">
+                                <!-- Data rows injected here -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Status -->
+                    <div id="statusMessage" class="hidden py-24 text-center flex flex-col items-center">
+                        <div class="loading-spinner mb-4" id="tableLoader"></div>
+                        <p id="statusText" class="text-gray-400 font-medium italic">กำลังดำเนินการ...</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Alert Modal -->
+    <div id="modal" class="fixed inset-0 bg-slate-900/60 hidden flex items-center justify-center z-[100] p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl transform transition-all scale-100 text-center">
+            <div id="modalIcon" class="mx-auto mb-4 bg-rose-100 text-rose-600 w-16 h-16 rounded-full flex items-center justify-center">
+                <i data-lucide="info" class="w-8 h-8"></i>
+            </div>
+            <h3 id="modalTitle" class="text-xl font-bold mb-2 text-gray-800">แจ้งเตือน</h3>
+            <p id="modalMessage" class="text-gray-500 mb-8 leading-relaxed"></p>
+            <div class="flex flex-col gap-2" id="modalButtons">
+                <button onclick="closeModal()" class="w-full px-6 py-3 bg-gray-100 text-gray-600 rounded-xl font-bold hover:bg-gray-200 transition-colors">ปิด</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Supabase Configuration
+        const supabaseUrl = "https://ufglhklqraqudlxkylzw.supabase.co";
+        const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmZ2xoa2xxcmFxdWRseGt5bHp3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY5NTY2MzUsImV4cCI6MjA4MjUzMjYzNX0._WxWgfvgonGFmQlXfLOSuKH4QqS6sWF3GOxnNPW6si8";
+        const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+        const mainForm = document.getElementById('fireExtinguisherForm');
+        const dataTableBody = document.getElementById('dataTableBody');
+        const itemCountLabel = document.getElementById('itemCount');
+        const statusMessage = document.getElementById('statusMessage');
+        const statusText = document.getElementById('statusText');
+        const tableContainer = document.getElementById('tableContainer');
+        const submitBtn = document.getElementById('submitBtn');
+
+        // Fetch Data
+        async function fetchData() {
+            setLoading(true);
+            const { data, error } = await _supabase
+                .from('data_scope1_fire_extinguisher')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            setLoading(false);
+            
+            if (error) {
+                showAlert("เกิดข้อผิดพลาด", error.message, "error");
+                return;
+            }
+
+            renderTable(data);
+        }
+
+        // Render Table
+        function renderTable(items) {
+            itemCountLabel.innerText = items.length;
+            
+            if (items.length === 0) {
+                tableContainer.classList.add('hidden');
+                statusMessage.classList.remove('hidden');
+                document.getElementById('tableLoader').classList.add('hidden');
+                statusText.innerText = "ยังไม่มีข้อมูลถังดับเพลิงในระบบ";
+                return;
+            }
+
+            tableContainer.classList.remove('hidden');
+            statusMessage.classList.add('hidden');
+            
+            dataTableBody.innerHTML = items.map(item => `
+                <tr class="hover:bg-rose-50/20 transition-all group">
+                    <td class="px-6 py-5">
+                        <div class="font-bold text-gray-800">${item.location}</div>
+                        <div class="flex items-center gap-2 mt-1">
+                            <span class="text-[10px] bg-emerald-50 text-emerald-600 px-1.5 py-0.5 rounded font-bold">ชั้น ${item.floor}</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-5">
+                        <div class="flex items-center gap-2">
+                             <div class="w-2 h-2 rounded-full ${getTypeColor(item.fire_type)}"></div>
+                             <span class="text-gray-700 font-semibold">${item.fire_type}</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-5 text-center">
+                        <span class="px-2 py-1 bg-slate-100 rounded text-slate-600 font-bold text-sm">${item.size} lbs</span>
+                    </td>
+                    <td class="px-6 py-5 text-center">
+                        <div class="text-lg font-bold text-emerald-600">${item.quantity}</div>
+                    </td>
+                    <td class="px-6 py-5 text-center">
+                        <button onclick="confirmDelete(${item.id}, '${item.location}')" 
+                            class="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all">
+                            <i data-lucide="trash-2" class="w-5 h-5"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+            
+            lucide.createIcons();
+        }
+
+        function getTypeColor(type) {
+            if (type === 'Dry Chemical') return 'bg-red-500';
+            if (type === 'CO2') return 'bg-black';
+            if (type === 'Clean Agent') return 'bg-green-500';
+            if (type === 'Foam') return 'bg-yellow-400';
+            return 'bg-blue-400';
+        }
+
+        // Add Data
+        mainForm.onsubmit = async (e) => {
+            e.preventDefault();
+            const formData = new FormData(mainForm);
+            const entryData = Object.fromEntries(formData.entries());
+
+            // Convert numeric fields
+            entryData.size = Number(entryData.size);
+            entryData.quantity = Number(entryData.quantity);
+
+            setSubmitting(true);
+            const { error } = await _supabase
+                .from('data_scope1_fire_extinguisher')
+                .insert([entryData]);
+
+            setSubmitting(false);
+
+            if (error) {
+                showAlert("บันทึกไม่สำเร็จ", error.message, "error");
+            } else {
+                mainForm.reset();
+                fetchData();
+                showAlert("สำเร็จ!", "บันทึกข้อมูลถังดับเพลิงเรียบร้อยแล้ว", "success");
+            }
+        };
+
+        // Delete Data
+        async function deleteData(id) {
+            const { error } = await _supabase
+                .from('data_scope1_fire_extinguisher')
+                .delete()
+                .eq('id', id);
+
+            if (error) {
+                showAlert("ลบไม่สำเร็จ", error.message, "error");
+            } else {
+                fetchData();
+            }
+        }
+
+        // UI Helpers
+        function setLoading(isLoading) {
+            if (isLoading) {
+                tableContainer.classList.add('opacity-40');
+                statusMessage.classList.remove('hidden');
+                document.getElementById('tableLoader').classList.remove('hidden');
+                statusText.innerText = "กำลังเข้าถึงฐานข้อมูล...";
+            } else {
+                tableContainer.classList.remove('opacity-40');
+                statusMessage.classList.add('hidden');
+            }
+        }
+
+        function setSubmitting(isSubmitting) {
+            submitBtn.disabled = isSubmitting;
+            submitBtn.innerHTML = isSubmitting 
+                ? `<div class="loading-spinner" style="width:20px; height:20px; border-top-color: white;"></div> <span>กำลังบันทึก...</span>`
+                : `<span>บันทึกข้อมูล</span>`;
+        }
+
+        function showAlert(title, msg, type = "info") {
+            const iconEl = document.getElementById('modalIcon');
+            if (type === "success") {
+                iconEl.className = "mx-auto mb-4 bg-emerald-100 text-emerald-600 w-16 h-16 rounded-full flex items-center justify-center";
+                iconEl.innerHTML = `<i data-lucide="check-circle" class="w-8 h-8"></i>`;
+            } else if (type === "error") {
+                iconEl.className = "mx-auto mb-4 bg-rose-100 text-emerald-600 w-16 h-16 rounded-full flex items-center justify-center";
+                iconEl.innerHTML = `<i data-lucide="alert-triangle" class="w-8 h-8"></i>`;
+            } else {
+                iconEl.className = "mx-auto mb-4 bg-blue-100 text-emerald-600 w-16 h-16 rounded-full flex items-center justify-center";
+                iconEl.innerHTML = `<i data-lucide="info" class="w-8 h-8"></i>`;
+            }
+
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalMessage').innerText = msg;
+            document.getElementById('modalButtons').innerHTML = `
+                <button onclick="closeModal()" class="w-full px-6 py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-500 transition-colors shadow-lg shadow-emerald-100">ตกลง</button>
+            `;
+            document.getElementById('modal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function confirmDelete(id, location) {
+            document.getElementById('modalIcon').className = "mx-auto mb-4 bg-rose-100 text-rose-600 w-16 h-16 rounded-full flex items-center justify-center";
+            document.getElementById('modalIcon').innerHTML = `<i data-lucide="trash-2" class="w-8 h-8"></i>`;
+            document.getElementById('modalTitle').innerText = "ยืนยันการลบ";
+            document.getElementById('modalMessage').innerText = `คุณต้องการลบข้อมูลถังดับเพลิงบริเวณ ${location} ใช่หรือไม่?`;
+            document.getElementById('modalButtons').innerHTML = `
+                <button onclick="closeModal()" class="w-full px-6 py-3 bg-gray-100 text-gray-600 rounded-xl font-bold hover:bg-gray-200 transition-colors">ยกเลิก</button>
+                <button id="confirmBtn" class="w-full px-6 py-3 bg-rose-600 text-white rounded-xl font-bold hover:bg-rose-700 transition-colors">ลบข้อมูลทันที</button>
+            `;
+            document.getElementById('modal').classList.remove('hidden');
+            document.getElementById('confirmBtn').onclick = () => {
+                closeModal();
+                deleteData(id);
+            };
+            lucide.createIcons();
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.add('hidden');
+        }
+
+        // Init
+        window.onload = () => {
+            lucide.createIcons();
+            fetchData();
+        };
+    </script>
+</body>
+</html>

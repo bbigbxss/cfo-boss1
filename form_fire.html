@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CFO - Fire Extinguisher</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Sarabun', sans-serif; background: #f8fafc; color: #1e293b; }
+        .form-input {
+            width: 100%; border-radius: 0.5rem;
+            border: 1px solid #cbd5e1; padding: 0.625rem; font-size: 0.875rem;
+            transition: all 0.2s; background-color: white;
+        }
+        select.form-input {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 0.5rem center;
+            background-repeat: no-repeat;
+            background-size: 1.5em 1.5em;
+            padding-right: 2.5rem;
+        }
+        .form-input:focus {
+            outline: none; border-color: #10b981;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+        .form-input:disabled {
+            background-color: #f1f5f9; cursor: not-allowed; color: #94a3b8;
+        }
+        .file-input::-webkit-file-upload-button {
+            background: #e2e8f0; border: none; padding: 4px 12px;
+            border-radius: 4px; color: #475569; font-weight: 600;
+            margin-right: 8px; cursor: pointer;
+        }
+        .card {
+            background: white; padding: 1.5rem; border-radius: 1rem;
+            border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            height: 100%;
+        }
+        .label-text { font-size: 0.8125rem; font-weight: 600; color: #64748b; margin-bottom: 0.375rem; display: block; }
+        .section-title {
+            font-size: 1rem; font-weight: 700; color: #0f172a;
+            padding-bottom: 0.75rem; border-bottom: 2px solid #f1f5f9;
+            margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            background-color: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
+            transition: opacity 0.3s ease;
+        }
+        .modal-content {
+            transform: scale(0.95);
+            transition: transform 0.3s ease;
+        }
+        .modal-open .modal-content {
+            transform: scale(1);
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <nav class="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-slate-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-20 items-center">
+                <div class="flex items-center gap-2">
+                    <button onclick="history.back()" class="p-2 rounded-full hover:bg-slate-100 text-slate-500 hover:text-emerald-800 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500" aria-label="Go back">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M19 12H5"/>
+                            <path d="M12 19l-7-7 7-7"/>
+                        </svg>
+                    </button>
+                    <span class="text-2xl font-bold tracking-tight text-emerald-800">Carbon Footprint for Organization</span>
+                </div>
+                <div class="hidden md:flex items-center gap-6">
+                    <a href="view_fire.html" class="bg-emerald-100 text-emerald-700 px-4 py-2 rounded-lg font-bold hover:bg-emerald-200 transition-colors">📊 ดูประวัติการบันทึก (Fire Extinguisher)</a>
+                    <a href="index.html" class="text-slate-600 hover:text-emerald-600 transition-colors">หน้าแรก</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+
+    <main class="max-w-7xl mx-auto py-8 px-4">
+        <div class="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="flex flex-wrap items-center gap-4">
+                 <h1 class="text-2xl font-extrabold text-slate-900">บันทึกข้อมูลถังดับเพลิง (Fire Extinguisher)</h1>
+                 <a href="manage_fire.html" class="flex items-center gap-2 px-5 py-2.5 bg-emerald-800 text-white text-sm font-bold rounded-xl hover:bg-emerald-600 transition-all shadow-md active:scale-95 group">
+                    จัดการข้อมูล
+                </a>
+            </div>
+            <div id="statusIndicator" class="hidden px-4 py-2 bg-blue-50 text-blue-700 rounded-full text-sm font-medium animate-pulse">
+                กำลังประมวลผลข้อมูล...
+            </div>
+        </div>
+        
+
+        <div id="successAlert" class="hidden mb-6 bg-emerald-50 border border-emerald-200 p-4 rounded-xl flex items-center gap-3 animate-in fade-in slide-in-from-top-4">
+            <div class="bg-emerald-500 text-white rounded-full p-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+            </div>
+            <p id="successMsg" class="text-emerald-800 font-semibold">บันทึกข้อมูลเรียบร้อยแล้ว!</p>
+        </div>
+
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
+            
+            <!-- FORM 1: บันทึกปกติ -->
+            <div class="xl:col-span-2 space-y-6">
+                <form id="dataEntryForm" class="space-y-6">
+                    <input type="hidden" id="fire_brand">
+                    <input type="hidden" id="fire_agent">
+                    <input type="hidden" id="fire_capacity">
+                    <input type="hidden" id="fire_tag">
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- ข้อมูลสถานที่ -->
+                        <div class="card">
+                            <h2 class="section-title"><span>📍</span> ตำแหน่งที่ตั้งถังดับเพลิง</h2>
+                            <div class="space-y-5">
+                                <div>
+                                    <label class="label-text">ระดับชั้น (Floor)</label>
+                                    <select id="floor_select" required class="form-input">
+                                        <option value="">กำลังโหลดข้อมูลชั้น...</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="label-text">บริเวณที่ติดตั้ง (Location / Position)</label>
+                                    <select id="location_select" required class="form-input" disabled>
+                                        <option value="">กรุณาเลือกชั้นก่อน</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- รายละเอียดถังดับเพลิง (Editable) -->
+                        <div class="card bg-white">
+                            <h2 class="section-title"><span>🧯</span> รายละเอียดถังดับเพลิง (แก้ไขได้)</h2>
+                            <div class="space-y-4">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="label-text">ชนิดถังดับเพลิง</label>
+                                        <input type="text" id="fire_type" required class="form-input" placeholder="เช่น CO2, Dry Powder">
+                                    </div>
+                                    <div>
+                                        <label class="label-text">ประเภทสาร</label>
+                                        <select id="agent_type" required class="form-input">
+                                            <option value="">กำลังโหลด...</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="label-text">ขนาด (lbs/kg)</label>
+                                        <input type="text" id="size" required class="form-input" placeholder="เช่น 10 lbs">
+                                    </div>
+                                    <div>
+                                        <label class="label-text">จำนวน (ถัง)</label>
+                                        <input type="number" id="quantity" required min="1" class="form-input" placeholder="1">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                         <!-- ข้อมูลการจัดซื้อ/จัดจ้าง -->
+                         <div class="card">
+                            <h2 class="section-title"><span>📜</span> ข้อมูลการจัดซื้อ</h2>
+                            <div class="space-y-5">
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="label-text">วันที่จัดซื้อ</label>
+                                        <input type="date" id="purchase_date" class="form-input">
+                                    </div>
+                                    <div>
+                                        <label class="label-text">จำนวนที่จัดซื้อ (ถัง/กิโลกรัม)</label>
+                                        <input type="number" id="purchase_volume" step="0.01" placeholder="0.00" class="form-input">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="label-text">หลักฐานการจัดซื้อ (ใบเสร็จ/ใบส่งของ)</label>
+                                    <input type="file" id="purchase_file" class="form-input file-input text-sm text-slate-500" accept="image/*,application/pdf">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ส่วนบันทึกการใช้งาน/เติมสาร -->
+                        <div class="card border-emerald-100">
+                            <h2 class="section-title text-emerald-800"><span>❄️</span> บันทึกการใช้งาน/เติมสาร</h2>
+                            <div class="space-y-4">
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="label-text">เดือนที่ดำเนินการ</label>
+                                        <select id="usage_month" required class="form-input">
+                                            <option value="">เลือกเดือน</option>
+                                            <option>มกราคม</option><option>กุมภาพันธ์</option><option>มีนาคม</option>
+                                            <option>เมษายน</option><option>พฤษภาคม</option><option>มิถุนายน</option>
+                                            <option>กรกฎาคม</option><option>สิงหาคม</option><option>กันยายน</option>
+                                            <option>ตุลาคม</option><option>พฤศจิกายน</option><option>ธันวาคม</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="label-text">วันที่ดำเนินการ</label>
+                                        <input type="date" id="usage_date" required class="form-input">
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="label-text">ปริมาณสารที่เติม (kg)</label>
+                                        <input type="number" id="usage_qty" step="0.001" placeholder="0.000" required class="form-input">
+                                    </div>
+                                    <div>
+                                        <label class="label-text">เลขใบกำกับภาษี</label>
+                                        <input type="text" id="tax_invoice" placeholder="INV-xxxx" class="form-input">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="label-text">รูปถ่าย/หลักฐาน</label>
+                                    <input type="file" id="usage_proof" class="form-input file-input" accept="image/*,application/pdf">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pt-2">
+                        <button type="submit" id="saveBtn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-4 rounded-xl font-bold shadow-lg transition-all flex justify-center items-center gap-2">
+                            <span id="btnLabel">บันทึกข้อมูลการใช้สารดับเพลิง</span>
+                            <span id="spinner" class="hidden animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- FORM 2: Bulk Zero (ไม่มีการใช้สารทั้งเดือน) -->
+            <div class="card overflow-hidden relative">
+                <h2 class="section-title"><span>📅</span> กรณีไม่มีการใช้งานทั้งเดือน</h2>
+                <p class="text-sm text-slate-600 mb-6 leading-relaxed">ใช้สำหรับบันทึกค่าการเติมเป็น <b>0 kg</b> ให้กับถังดับเพลิง <b>"ทุกถัง ทุกชั้น"</b> ในระบบ</p>
+                
+                <div class="space-y-5">
+                    <div>
+                        <label class="label-text">เลือกเดือนที่ไม่มีการใช้งาน</label>
+                        <select id="bulk_month" class="form-input ring-offset-2 focus:ring-2 focus:ring-blue-500">
+                            <option value="">เลือกเดือน</option>
+                            <option>มกราคม</option><option>กุมภาพันธ์</option><option>มีนาคม</option>
+                            <option>เมษายน</option><option>พฤษภาคม</option><option>มิถุนายน</option>
+                            <option>กรกฎาคม</option><option>สิงหาคม</option><option>กันยายน</option>
+                            <option>ตุลาคม</option><option>พฤศจิกายน</option><option>ธันวาคม</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="label-text">ปริมาณสารที่บันทึก (คงที่)</label>
+                        <div class="flex items-center justify-center p-3 rounded-lg border bg-slate-50">
+                            <span class="text-xl font-bold text-emerald-600">0.000</span>
+                            <span class="ml-2 text-emerald-600 text-sm font-semibold">kg</span>
+                        </div>
+                    </div>
+
+                    <div class="pt-4">
+                        <button type="button" id="bulkSaveBtn" onclick="handleBulkZeroSave()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-4 rounded-xl font-bold shadow-md hover:shadow-xl transform active:scale-[0.98] transition-all flex flex-col items-center justify-center gap-1">
+                            <span>บันทึก "0" ทุกถังในเดือนนี้</span>
+                        </button>
+                    </div>
+
+                    <div id="bulkStatus" class="hidden text-center text-xs font-bold p-3 rounded-lg border animate-pulse"></div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Custom Modal UI -->
+    <div id="customModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div class="modal-overlay absolute inset-0"></div>
+        <div class="modal-content relative bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 overflow-hidden">
+            <div id="modalIcon" class="mb-4 flex justify-center"></div>
+            <h3 id="modalTitle" class="text-xl font-bold text-slate-900 text-center mb-2"></h3>
+            <p id="modalMessage" class="text-slate-600 text-center mb-8 leading-relaxed"></p>
+            <div id="modalFooter" class="flex gap-3 mt-6"></div>
+        </div>
+    </div>
+
+<script>
+    const supabaseUrl = "https://ufglhklqraqudlxkylzw.supabase.co";
+    const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmZ2xoa2xxcmFxdWRseGt5bHp3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY5NTY2MzUsImV4cCI6MjA4MjUzMjYzNX0._WxWgfvgonGFmQlXfLOSuKH4QqS6sWF3GOxnNPW6si8";
+    const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+    const MAKE_WEBHOOK_URL = "https://hook.eu2.make.com/82crz4q2g9bihpovgkqj0xiiuag7cezk";
+
+    const floorSelect = document.getElementById('floor_select');
+    const locationSelect = document.getElementById('location_select');
+    const fireTypeInput = document.getElementById('fire_type');
+    const agentTypeInput = document.getElementById('agent_type');
+    const sizeInput = document.getElementById('size');
+    const quantityInput = document.getElementById('quantity');
+    const brandInput = document.getElementById('fire_brand');
+    const agentInput = document.getElementById('fire_agent');
+    const capacityInput = document.getElementById('fire_capacity');
+    const tagInput = document.getElementById('fire_tag');
+
+    let emissionFactorsMap = {};
+
+    // --- Helper Functions for Custom UI ---
+    function showModal({ title, message, type = 'confirm', onConfirm = null }) {
+        const modal = document.getElementById('customModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalMessage = document.getElementById('modalMessage');
+        const modalIcon = document.getElementById('modalIcon');
+        const modalFooter = document.getElementById('modalFooter');
+
+        modalTitle.textContent = title;
+        modalMessage.textContent = message;
+        modalIcon.innerHTML = type === 'confirm' 
+            ? `<div class="bg-emerald-600 p-3 rounded-full"><svg class="w-10 h-10 text-slate-100" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg></div>`
+            : `<div class="bg-slate-100 p-3 rounded-full"><svg class="w-10 h-10 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg></div>`;
+
+        modalFooter.innerHTML = '';
+        if (type === 'confirm') {
+            const cancelBtn = document.createElement('button');
+            cancelBtn.className = "flex-1 py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-colors";
+            cancelBtn.textContent = "ยกเลิก";
+            cancelBtn.onclick = () => closeModal();
+            
+            const confirmBtn = document.createElement('button');
+            confirmBtn.className = "flex-1 py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg transition-all";
+            confirmBtn.textContent = "ยืนยันการบันทึก";
+            confirmBtn.onclick = () => {
+                closeModal();
+                if (onConfirm) onConfirm();
+            };
+            
+            modalFooter.appendChild(cancelBtn);
+            modalFooter.appendChild(confirmBtn);
+        } else {
+            const okBtn = document.createElement('button');
+            okBtn.className = "w-full py-3 px-4 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl transition-colors";
+            okBtn.textContent = "ตกลง";
+            okBtn.onclick = () => closeModal();
+            modalFooter.appendChild(okBtn);
+        }
+
+        modal.classList.remove('hidden');
+        setTimeout(() => document.body.classList.add('modal-open'), 10);
+    }
+
+    function closeModal() {
+        document.body.classList.remove('modal-open');
+        setTimeout(() => document.getElementById('customModal').classList.add('hidden'), 300);
+    }
+
+    // --- Main Logic ---
+
+    async function initFloors() {
+        try {
+            const { data, error } = await supabaseClient.from('data_scope1_fire_extinguisher').select('floor').order('floor', { ascending: true });
+            if (error) throw error;
+            const uniqueFloors = [...new Set(data.map(item => item.floor))].filter(Boolean);
+            floorSelect.innerHTML = '<option value="">เลือกชั้น</option>';
+            uniqueFloors.forEach(f => {
+                const opt = document.createElement('option');
+                opt.value = f; opt.textContent = `ชั้น ${f}`;
+                floorSelect.appendChild(opt);
+            });
+        } catch (err) { console.error(err); }
+    }
+
+    async function loadEmissionFactors() {
+        try {
+            const { data: efs, error } = await supabaseClient.from('emission_factors').select('fuel_name, co2, ch4, n2o, total_co2eq').eq('category', 'Refrigerant'); 
+            if (error) throw error;
+            if (efs) {
+                agentTypeInput.innerHTML = '<option value="">เลือกประเภทสาร</option>' + efs.map(f => `<option value="${f.fuel_name}">${f.fuel_name}</option>`).join('');
+                efs.forEach(f => {
+                    emissionFactorsMap[f.fuel_name.toUpperCase()] = {
+                        co2: f.co2 || 0, ch4: f.ch4 || 0, n2o: f.n2o || 0, total_co2eq: f.total_co2eq || 0
+                    };
+                });
+            }
+        } catch (err) { console.error(err); }
+    }
+
+    async function loadLocationsByFloor(selectedFloor) {
+        locationSelect.innerHTML = '<option value="">กำลังโหลด...</option>';
+        locationSelect.disabled = true;
+        try {
+            const { data, error } = await supabaseClient.from('data_scope1_fire_extinguisher').select('*').eq('floor', selectedFloor).order('location', { ascending: true });
+            if (error) throw error;
+            locationSelect.innerHTML = '<option value="">เลือกตำแหน่งที่ตั้ง</option>';
+            if (data && data.length > 0) {
+                locationSelect.disabled = false;
+                data.forEach(item => {
+                    const opt = document.createElement('option');
+                    opt.value = item.id;
+                    opt.textContent = item.location || 'ไม่ระบุตำแหน่ง';
+                    opt.dataset.details = JSON.stringify(item);
+                    locationSelect.appendChild(opt);
+                });
+            }
+        } catch (err) { console.error(err); }
+    }
+
+    async function uploadToStorage(file, folder) {
+        if (!file) return null;
+        try {
+            const fileExt = file.name.split('.').pop();
+            const fileName = `fire_${Date.now()}.${fileExt}`;
+            const filePath = `${folder}/${fileName}`;
+            const { error } = await supabaseClient.storage.from('images').upload(filePath, file);
+            if (error) throw error;
+            return supabaseClient.storage.from('images').getPublicUrl(filePath).data.publicUrl;
+        } catch (err) { return null; }
+    }
+
+    // บันทึกแบบเหมา 0 ทั่วทั้งองค์กร
+    async function handleBulkZeroSave() {
+        const month = document.getElementById('bulk_month').value;
+        if (!month) {
+            showModal({ title: 'กรุณาเลือกเดือน', message: 'กรุณาเลือกเดือนที่ต้องการบันทึกข้อมูลก่อนดำเนินการต่อ', type: 'alert' });
+            return;
+        }
+
+        showModal({
+            title: 'ยืนยันการบันทึกข้อมูล',
+            message: `คุณแน่ใจหรือไม่ว่าต้องการบันทึกปริมาณการเติมเป็น 0.000 kg ให้กับถังดับเพลิง "ทุกถัง" ในเดือน ${month}?`,
+            type: 'confirm',
+            onConfirm: async () => {
+                const btn = document.getElementById('bulkSaveBtn');
+                const status = document.getElementById('bulkStatus');
+                btn.disabled = true;
+                status.classList.remove('hidden', 'bg-emerald-50', 'text-emerald-600', 'bg-red-50', 'text-red-600');
+                status.classList.add('bg-blue-50', 'text-blue-600', 'border-blue-100');
+                status.textContent = "กำลังรวบรวมข้อมูลทะเบียนถังดับเพลิง...";
+
+                try {
+                    const { data: allFire, error: fireError } = await supabaseClient.from('data_scope1_fire_extinguisher').select('*');
+                    if (fireError) throw fireError;
+
+                    if (!allFire || allFire.length === 0) throw new Error("ไม่พบข้อมูลทะเบียนถังดับเพลิงในระบบ");
+
+                    status.textContent = `กำลังประมวลผลข้อมูล ${allFire.length} ถัง...`;
+                    const today = new Date().toISOString().split('T')[0];
+
+                    const payloads = allFire.map(unit => {
+                        const agentType = unit.agent_type || unit.fire_extinguisher_type || '';
+                        const factors = emissionFactorsMap[agentType.toUpperCase()] || { co2: 0, ch4: 0, n2o: 0, total_co2eq: 0 };
+                        
+                        return {
+                            floor: unit.floor,
+                            position: unit.location,
+                            fire_type: unit.fire_extinguisher_type || unit.fire_type,
+                            agent_type: agentType,
+                            size: unit.size,
+                            quantity: unit.quantity || 1,
+                            month: month,
+                            date: today,
+                            vol: 0,
+                            ef_co2: factors.co2,
+                            ef_ch4: factors.ch4,
+                            ef_n2o: factors.n2o,
+                            ef: factors.total_co2eq,
+                            total_co2: 0, total_ch4: 0, total_n2o: 0, total_ef: 0,
+                            tax_invoice: 'SYSTEM-BULK-ZERO'
+                        };
+                    });
+
+                    const { error: insertError } = await supabaseClient.from('scope1_fire').insert(payloads);
+                    if (insertError) throw insertError;
+
+                    // Webhook
+                    if (MAKE_WEBHOOK_URL) {
+                        fetch(MAKE_WEBHOOK_URL, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ type: 'fire_bulk_zero', month: month, count: payloads.length, timestamp: new Date().toISOString() })
+                        }).catch(e => console.warn(e));
+                    }
+
+                    status.textContent = `✅ บันทึก 0 kg สำเร็จ (${allFire.length} รายการ)`;
+                    status.classList.replace('bg-blue-50', 'bg-emerald-50');
+                    status.classList.replace('text-blue-600', 'text-emerald-600');
+                    
+                    document.getElementById('successAlert').classList.remove('hidden');
+                    document.getElementById('successMsg').textContent = `บันทึกข้อมูลเดือน ${month} เรียบร้อยแล้ว!`;
+                    
+                    setTimeout(() => {
+                        status.classList.add('hidden');
+                        document.getElementById('successAlert').classList.add('hidden');
+                    }, 5000);
+
+                } catch (err) {
+                    console.error(err);
+                    status.textContent = "❌ ข้อผิดพลาด: " + err.message;
+                    status.classList.replace('bg-blue-50', 'bg-red-50');
+                    status.classList.replace('text-blue-600', 'text-red-600');
+                } finally {
+                    btn.disabled = false;
+                }
+            }
+        });
+    }
+
+    // Events
+    floorSelect.addEventListener('change', e => e.target.value ? loadLocationsByFloor(e.target.value) : null);
+    
+    locationSelect.addEventListener('change', e => {
+        const selectedOption = e.target.options[e.target.selectedIndex];
+        if (selectedOption && selectedOption.dataset.details) {
+            const details = JSON.parse(selectedOption.dataset.details);
+            const typeToSet = details.fire_type || details.fire_extinguisher_type || '';
+            const agentToSet = details.agent_type || typeToSet; 
+            
+            fireTypeInput.value = typeToSet; 
+            agentTypeInput.value = agentToSet;
+            sizeInput.value = details.size || '';
+            quantityInput.value = details.quantity || '1';
+
+            brandInput.value = details.brand || '-';
+            agentInput.value = agentToSet || '-';
+            capacityInput.value = details.size || '0';
+            tagInput.value = details.tag_id || '-';
+        }
+    });
+
+    document.getElementById('dataEntryForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const saveBtn = document.getElementById('saveBtn');
+        const spinner = document.getElementById('spinner');
+        const btnLabel = document.getElementById('btnLabel');
+
+        saveBtn.disabled = true; spinner.classList.remove('hidden'); btnLabel.textContent = "กำลังบันทึก...";
+
+        try {
+            const agentType = agentTypeInput.value; 
+            const usageQty = parseFloat(document.getElementById('usage_qty').value) || 0;
+            const factors = emissionFactorsMap[agentType.toUpperCase()] || { co2: 0, ch4: 0, n2o: 0, total_co2eq: 0 };
+            
+            const [proofUrl, purchaseUrl] = await Promise.all([
+                uploadToStorage(document.getElementById('usage_proof').files[0], 'scope1_fugitive_fire'),
+                uploadToStorage(document.getElementById('purchase_file').files[0], 'purchase_fire')
+            ]);
+
+            let procurementPayload = null;
+            if (document.getElementById('purchase_date').value) {
+                procurementPayload = {
+                    purchase_date: document.getElementById('purchase_date').value,
+                    purchase_vol: parseFloat(document.getElementById('purchase_volume').value) || 0,
+                    file_url: purchaseUrl,
+                    category: 'fire_extinguisher'
+                };
+                await supabaseClient.from('procurement_information').insert([procurementPayload]);
+            }
+
+            const payload = {
+                floor: floorSelect.value,
+                position: locationSelect.options[locationSelect.selectedIndex].text,
+                fire_type: fireTypeInput.value,
+                agent_type: agentType, 
+                size: sizeInput.value,
+                quantity: parseInt(quantityInput.value) || 1,
+                month: document.getElementById('usage_month').value,
+                date: document.getElementById('usage_date').value,
+                vol: usageQty,
+                ef_co2: factors.co2, ef_ch4: factors.ch4, ef_n2o: factors.n2o, ef: factors.total_co2eq,
+                total_co2: usageQty * factors.co2,
+                total_ch4: usageQty * factors.ch4,
+                total_n2o: usageQty * factors.n2o,
+                total_ef: usageQty * factors.total_co2eq,
+                file_url: proofUrl,
+                tax_invoice: document.getElementById('tax_invoice').value,
+            };
+
+            const { error } = await supabaseClient.from('scope1_fire').insert([payload]);
+            if (error) throw error;
+
+            if (MAKE_WEBHOOK_URL) {
+                fetch(MAKE_WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ type: 'fire_single_save', data: payload, timestamp: new Date().toISOString() })
+                }).catch(e => console.warn(e));
+            }
+
+            document.getElementById('successAlert').classList.remove('hidden');
+            document.getElementById('usage_qty').value = '';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            setTimeout(() => document.getElementById('successAlert').classList.add('hidden'), 3000);
+
+        } catch (err) { 
+            showModal({ title: 'เกิดข้อผิดพลาด', message: err.message, type: 'alert' });
+        } finally { 
+            saveBtn.disabled = false; spinner.classList.add('hidden'); btnLabel.textContent = "บันทึกข้อมูลการใช้สารดับเพลิง"; 
+        }
+    });
+
+    window.addEventListener('DOMContentLoaded', () => { initFloors(); loadEmissionFactors(); });
+</script>
+</body>
+</html>

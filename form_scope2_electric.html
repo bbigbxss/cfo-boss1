@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CFO - Electricity</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Sarabun', sans-serif; background: #f8fafc; color: #1e293b; }
+        .form-input {
+            width: 100%; border-radius: 0.5rem;
+            border: 1px solid #cbd5e1; padding: 0.625rem; font-size: 0.875rem;
+            transition: all 0.2s; background-color: white;
+        }
+        .form-input:focus {
+            outline: none; border-color: #0284c7;
+            box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.1);
+        }
+        .file-input::-webkit-file-upload-button {
+            background: #e2e8f0; border: none; padding: 4px 12px;
+            border-radius: 4px; color: #475569; font-weight: 600;
+            margin-right: 8px; cursor: pointer;
+        }
+        .card {
+            background: white; padding: 1.5rem; border-radius: 1rem;
+            border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            height: 100%;
+        }
+        .label-text { font-size: 0.8125rem; font-weight: 600; color: #64748b; margin-bottom: 0.375rem; display: block; }
+        .section-title {
+            font-size: 1rem; font-weight: 700; color: #0f172a; 
+            padding-bottom: 0.75rem; border-bottom: 2px solid #f1f5f9;
+            margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <nav class="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-slate-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-20 items-center">
+                <div class="flex items-center gap-2">
+                    <button onclick="history.back()" class="p-2 rounded-full hover:bg-slate-100 text-slate-500 hover:text-emerald-800 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500" aria-label="Go back">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M19 12H5"/>
+                            <path d="M12 19l-7-7 7-7"/>
+                        </svg>
+                    </button>
+                    <span class="text-2xl font-bold tracking-tight text-emerald-800">Carbon Footprint for Organization</span>
+                </div>
+                <div class="hidden md:flex items-center gap-6">
+                    <a href="view_car.html" class="bg-emerald-100 text-emerald-700 px-4 py-2 rounded-lg font-bold hover:bg-emerald-200 transition-colors">📊 ดูประวัติการบันทึก</a>
+                    <a href="index.html" class="text-slate-600 hover:text-emerald-600 transition-colors">หน้าแรก</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-[98%] mx-auto py-8 px-4"> 
+        <div class="mb-6">
+            <h1 class="text-2xl font-extrabold text-slate-900">⚡ บันทึกข้อมูลการใช้ไฟฟ้า</h1>
+        </div>
+
+        <div id="successAlert" class="hidden mb-6 bg-sky-50 border border-sky-200 p-4 rounded-xl flex items-center gap-3 animate-in fade-in slide-in-from-top-4">
+            <div class="bg-sky-500 text-white rounded-full p-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+            </div>
+            <p id="successMsg" class="text-sky-800 font-semibold">บันทึกข้อมูลการใช้ไฟฟ้าเรียบร้อยแล้ว!</p>
+        </div>
+
+        <form id="dataForm" class="space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                <!-- Card 1: ข้อมูลสถานที่ -->
+                <div class="card">
+                    <h2 class="section-title"><span>📍</span> ข้อมูลสถานที่</h2>
+                    <div class="space-y-5">
+                        <div>
+                            <label class="label-text">ชั้น (Floor)</label>
+                            <select id="floor_select" required class="form-input">
+                                <option value="">กำลังโหลดข้อมูลชั้น...</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="label-text">สถานที่ / ห้อง (Location)</label>
+                            <select id="location_select" required class="form-input" disabled>
+                                <option value="">กรุณาเลือกชั้นก่อน</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 2: รายละเอียดการใช้ไฟฟ้า -->
+                <div class="card">
+                    <h2 class="section-title"><span>⚡</span> รายละเอียดการใช้ไฟฟ้า</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="label-text">ประจำเดือน</label>
+                            <select id="month_record" required class="form-input">
+                                <option value="">เลือกเดือน</option>
+                                <option>มกราคม</option><option>กุมภาพันธ์</option><option>มีนาคม</option>
+                                <option>เมษายน</option><option>พฤษภาคม</option><option>มิถุนายน</option>
+                                <option>กรกฎาคม</option><option>สิงหาคม</option><option>กันยายน</option>
+                                <option>ตุลาคม</option><option>พฤศจิกายน</option><option>ธันวาคม</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="label-text">วันที่จดบันทึก / วันที่ในบิล</label>
+                            <input type="date" id="record_date" required class="form-input">
+                        </div>
+                        <div>
+                            <label class="label-text">ปริมาณไฟฟ้าที่ใช้ (kWh/หน่วย)</label>
+                            <input type="number" step="0.01" id="energy_amount" required class="form-input" placeholder="0.00">
+                        </div>
+                        <div>
+                            <label class="label-text">แนบหลักฐาน (บิลค่าไฟ/รูปมิเตอร์)</label>
+                            <input type="file" id="evidence_file" class="form-input file-input text-xs" accept="image/*,application/pdf">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 3: ข้อมูลการชำระเงิน -->
+                <div class="card">
+                    <h2 class="section-title"><span>💳</span> ข้อมูลการชำระเงิน</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="label-text">วันที่ชำระเงิน</label>
+                            <input type="date" id="purchase_date" class="form-input">
+                        </div>
+                        <div>
+                            <label class="label-text">จำนวนเงินรวม (บาท)</label>
+                            <input type="number" step="0.01" id="purchase_amount" class="form-input" placeholder="0.00">
+                        </div>
+                        <div>
+                            <label class="label-text">แนบหลักฐานการชำระเงิน</label>
+                            <input type="file" id="purchase_file" class="form-input file-input text-xs" accept="image/*,application/pdf">
+                        </div>
+                        
+                        <div class="pt-6 space-y-3">
+                            <button type="submit" id="saveBtn" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-3 rounded-xl font-bold shadow-lg transition-all flex justify-center items-center gap-2">
+                                <span id="btnLabel">บันทึกข้อมูล</span>
+                                <span id="spinner" class="hidden animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
+                            </button>
+                            <button type="reset" class="w-full py-2 text-sm font-semibold text-slate-400 hover:text-slate-600 transition-all">ล้างข้อมูล</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </form>
+    </main>
+
+<script>
+    const { createClient } = supabase;
+    const supabaseUrl = "https://ufglhklqraqudlxkylzw.supabase.co";
+    const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmZ2xoa2xxcmFxdWRseGt5bHp3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY5NTY2MzUsImV4cCI6MjA4MjUzMjYzNX0._WxWgfvgonGFmQlXfLOSuKH4QqS6sWF3GOxnNPW6si8";
+    const supabaseClient = createClient(supabaseUrl, supabaseKey);
+    
+    let masterLocations = []; 
+    let electricEF = 0;
+
+    async function initData() {
+        try {
+            // ดึงข้อมูล Master Data สำหรับสถานที่
+            const { data: locations, error: locError } = await supabaseClient
+                .from('data_scope2_electric')
+                .select('*')
+                .order('floor', { ascending: true });
+
+            if (locError) throw locError;
+
+            masterLocations = locations || [];
+
+            const floorSelect = document.getElementById('floor_select');
+            // กรองชั้นที่ไม่ซ้ำกัน
+            const uniqueFloors = [...new Set(masterLocations.map(item => item.floor))];
+            
+            floorSelect.innerHTML = '<option value="">เลือกชั้น</option>';
+            uniqueFloors.forEach(floor => {
+                floorSelect.innerHTML += `<option value="${floor}">${floor}</option>`;
+            });
+
+            // โหลด Emission Factors สำหรับ Electricity
+            const { data: efs } = await supabaseClient
+                .from('emission_factors')
+                .select('total_co2eq')
+                .eq('fuel_name', 'Purchased Electricity') 
+                .single();
+
+            electricEF = efs ? efs.total_co2eq : 0.4999;
+
+            setupDropdownLogic();
+
+        } catch (err) { 
+            console.error("Initialization Error:", err);
+            document.getElementById('floor_select').innerHTML = '<option value="">ไม่สามารถโหลดข้อมูลได้</option>';
+        }
+    }
+
+    function setupDropdownLogic() {
+        const floorSelect = document.getElementById('floor_select');
+        const locSelect = document.getElementById('location_select');
+
+        floorSelect.addEventListener('change', (e) => {
+            const selectedFloor = e.target.value;
+            locSelect.innerHTML = '<option value="">เลือกสถานที่</option>';
+            
+            if (selectedFloor) {
+                locSelect.disabled = false;
+                // กรองสถานที่จากชั้นที่เลือก
+                const filteredLocs = masterLocations.filter(item => item.floor === selectedFloor);
+                filteredLocs.forEach(loc => {
+                    if(loc.location) locSelect.innerHTML += `<option value="${loc.location}">${loc.location}</option>`;
+                });
+            } else {
+                locSelect.disabled = true;
+                locSelect.innerHTML = '<option value="">กรุณาเลือกชั้นก่อน</option>';
+            }
+        });
+    }
+
+    async function uploadToStorage(file, folder = 'scope2_electric') {
+        if (!file) return null;
+        try {
+            const fileExt = file.name.split('.').pop();
+            const fileName = `elec_${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+            const filePath = `${folder}/${fileName}`; 
+            const { error: uploadError } = await supabaseClient.storage.from('images').upload(filePath, file);
+            if (uploadError) throw uploadError;
+            const { data: urlData } = supabaseClient.storage.from('images').getPublicUrl(filePath);
+            return urlData.publicUrl;
+        } catch (err) { return null; }
+    }
+
+    document.getElementById('dataForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const saveBtn = document.getElementById('saveBtn');
+        const spinner = document.getElementById('spinner');
+        const btnLabel = document.getElementById('btnLabel');
+
+        saveBtn.disabled = true; spinner.classList.remove('hidden'); btnLabel.textContent = "กำลังบันทึก...";
+
+        try {
+            const floor = document.getElementById('floor_select').value;
+            const location = document.getElementById('location_select').value;
+            const month = document.getElementById('month_record').value;
+            const recordDate = document.getElementById('record_date').value;
+            const amountKwh = parseFloat(document.getElementById('energy_amount').value) || 0;
+            const evidenceFile = document.getElementById('evidence_file').files[0];
+
+            const purchaseDate = document.getElementById('purchase_date').value;
+            const purchaseAmt = parseFloat(document.getElementById('purchase_amount').value) || 0;
+            const purchaseFile = document.getElementById('purchase_file').files[0];
+
+            const [evidenceUrl, purchaseUrl] = await Promise.all([
+                uploadToStorage(evidenceFile, 'scope2_electric'),
+                uploadToStorage(purchaseFile, 'purchase_electric')
+            ]);
+
+            // บันทึกข้อมูลการจัดซื้อ
+            let procurementPayload = null;
+            if (purchaseDate || purchaseAmt > 0) {
+                procurementPayload = {
+                    purchase_date: purchaseDate || null,
+                    purchase_vol: purchaseAmt,
+                    file_url: purchaseUrl,
+                    category: 'electricity',
+                };
+                await supabaseClient.from('procurement_information').insert([procurementPayload]);
+            }
+
+            // คำนวณ Carbon Footprint
+            const totalCo2eq = amountKwh * electricEF;
+
+            const payload = {
+                floor: floor,
+                location: location,
+                month: month,
+                date_record: recordDate,
+                amount_kwh: amountKwh,
+                ef_value: electricEF,
+                total_co2eq: totalCo2eq,
+                file_url: evidenceUrl,
+                created_at: new Date().toISOString()
+            };
+
+            const { error } = await supabaseClient.from('scope2_electric').insert([payload]);
+            if (error) throw error;
+
+            // Webhook
+            const MAKE_WEBHOOK_URL = "https://hook.eu2.make.com/vrq2poljim3g9ehvx7x6lgh6ngkqa5kc"; 
+            if (MAKE_WEBHOOK_URL) {
+                try {
+                    await fetch(MAKE_WEBHOOK_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            type: 'electricity_entry',
+                            data: payload,
+                            procurement: procurementPayload,
+                            timestamp: new Date().toISOString()
+                        })
+                    });
+                } catch (wErr) { console.error("Webhook Error:", wErr); }
+            }
+
+            document.getElementById('successAlert').classList.remove('hidden');
+            document.getElementById('dataForm').reset();
+            document.getElementById('location_select').disabled = true;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            setTimeout(() => { document.getElementById('successAlert').classList.add('hidden'); }, 5000);
+
+        } catch (err) { 
+            console.error(err);
+            alert("เกิดข้อผิดพลาด: " + err.message); 
+        } finally { 
+            saveBtn.disabled = false; spinner.classList.add('hidden'); btnLabel.textContent = "บันทึกข้อมูล"; 
+        }
+    });
+
+    window.addEventListener('DOMContentLoaded', initData);
+</script>
+</body>
+</html>

@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CFO - Car</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Sarabun', sans-serif; background: #f8fafc; color: #1e293b; }
+        .form-input {
+            width: 100%; border-radius: 0.5rem;
+            border: 1px solid #cbd5e1; padding: 0.625rem; font-size: 0.875rem;
+            transition: all 0.2s; background-color: white;
+        }
+        .form-input:focus {
+            outline: none; border-color: #10b981;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+        .file-input::-webkit-file-upload-button {
+            background: #e2e8f0; border: none; padding: 4px 12px;
+            border-radius: 4px; color: #475569; font-weight: 600;
+            margin-right: 8px; cursor: pointer;
+        }
+        .card {
+            background: white; padding: 1.5rem; border-radius: 1rem;
+            border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            height: 100%;
+        }
+        .label-text { font-size: 0.8125rem; font-weight: 600; color: #64748b; margin-bottom: 0.375rem; display: block; }
+        .section-title {
+            font-size: 1rem; font-weight: 700; color: #0f172a; 
+            padding-bottom: 0.75rem; border-bottom: 2px solid #f1f5f9;
+            margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <nav class="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-slate-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-20 items-center">
+                <div class="flex items-center gap-2">
+                    <button onclick="history.back()" class="p-2 rounded-full hover:bg-slate-100 text-slate-500 hover:text-emerald-800 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500" aria-label="Go back">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M19 12H5"/>
+                            <path d="M12 19l-7-7 7-7"/>
+                        </svg>
+                    </button>
+                    <span class="text-2xl font-bold tracking-tight text-emerald-800">Carbon Footprint for Organization</span>
+                </div>
+                <div class="hidden md:flex items-center gap-6">
+                    <a href="view_car.html" class="bg-emerald-100 text-emerald-700 px-4 py-2 rounded-lg font-bold hover:bg-emerald-200 transition-colors">📊 ดูประวัติการบันทึก (Car)</a>
+                    <a href="index.html" class="text-slate-600 hover:text-emerald-600 transition-colors">หน้าแรก</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+
+    <main class="max-w-[98%] mx-auto py-8 px-4"> 
+        <div class="mb-6 flex justify-between items-end">
+            <div>
+                <h1 class="text-2xl font-extrabold text-slate-900">บันทึกข้อมูลการใช้เชื้อเพลิงของยานพาหนะ (Car)</h1>
+            </div>
+        </div>
+
+        <div id="successAlert" class="hidden mb-6 bg-emerald-50 border border-emerald-200 p-4 rounded-xl flex items-center gap-3 animate-in fade-in slide-in-from-top-4">
+            <div class="bg-emerald-500 text-white rounded-full p-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+            </div>
+            <p id="successMsg" class="text-emerald-800 font-semibold">บันทึกข้อมูลเรียบร้อยแล้ว!</p>
+        </div>
+
+        <form id="dataForm" class="space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                <!-- Card 1: ข้อมูลยานพาหนะ -->
+                <div class="card">
+                    <h2 class="section-title"><span>🚘</span> ข้อมูลยานพาหนะ</h2>
+                    <div class="space-y-5">
+                        <div>
+                            <label class="label-text">เลขทะเบียนรถ</label>
+                            <select id="vehicle_reg" required class="form-input">
+                                <option value="">กำลังโหลดข้อมูล...</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="label-text">ยี่ห้อ / รุ่น</label>
+                            <input id="brand_model" required class="form-input" placeholder="เช่น Nissan March" readonly>
+                        </div>
+                        <div>
+                            <label class="label-text">ชนิดเชื้อเพลิง</label>
+                            <select id="fuel_type" required class="form-input fuel-selector"></select>
+                        </div>
+                        <div>
+                            <label class="label-text">ประเภทรถ</label>
+                            <input id="vehicle_type" required class="form-input" placeholder="เช่น เก๋ง" readonly>
+                        </div>
+                        <div>
+                            <label class="label-text">หน่วยงาน</label>
+                            <input id="department" required class="form-input" placeholder="เช่น Implement" readonly>
+                        </div>
+                        <div>
+                            <label class="label-text">หมายเลขบัตร Fleet</label>
+                            <input id="fleet" required class="form-input" placeholder="FLEET" readonly>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 2: รายละเอียดการเติมเชื้อเพลิง -->
+                <div class="card">
+                    <h2 class="section-title"><span>⛽</span> รายละเอียดการเติมเชื้อเพลิง</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="label-text">ประจำเดือน</label>
+                            <select id="month_record" required class="form-input">
+                                <option value="">เลือกเดือน</option>
+                                <option>มกราคม</option><option>กุมภาพันธ์</option><option>มีนาคม</option>
+                                <option>เมษายน</option><option>พฤษภาคม</option><option>มิถุนายน</option>
+                                <option>กรกฎาคม</option><option>สิงหาคม</option><option>กันยายน</option>
+                                <option>ตุลาคม</option><option>พฤศจิกายน</option><option>ธันวาคม</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="label-text">วันที่เติม</label>
+                            <input type="date" id="fill_date" required class="form-input">
+                        </div>
+                        <div>
+                            <label class="label-text">ปริมาตรที่เติม (ลิตร)</label>
+                            <input type="number" step="0.01" id="volume" required class="form-input" placeholder="0.00">
+                        </div>
+                        <div>
+                            <label class="label-text">เลขใบกำกับภาษี</label>
+                            <input id="tax_invoice" class="form-input" placeholder="เลขที่">
+                        </div>
+                        <div>
+                            <label class="label-text">แนบหลักฐานการเติม</label>
+                            <input type="file" id="fuel_file" class="form-input file-input text-xs" accept="image/*,application/pdf">
+                        </div>
+                        <div class="pt-6 space-y-3">
+                            <button type="submit" id="saveBtn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-bold shadow-lg transition-all flex justify-center items-center gap-2">
+                                <span id="btnLabel">บันทึกข้อมูล</span>
+                                <span id="spinner" class="hidden animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
+                            </button>
+                            <button type="reset" class="w-full py-2 text-sm font-semibold text-slate-400 hover:text-slate-600 transition-all">ล้างข้อมูลฟอร์ม</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 3: จัดการฐานข้อมูล (ปุ่มเพิ่ม-ลบ ข้อมูล) -->
+                <div class="card flex flex-col">
+                    <h2 class="section-title"><span>🛠️</span> การจัดการข้อมูล</h2>
+                    <div class="flex-grow flex flex-col justify-center items-center text-center space-y-6">
+                        <div class="bg-slate-50 p-6 rounded-2xl border border-dashed border-slate-200 w-full">
+                            <div class="bg-slate-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-600">
+                                    <path d="M12 20h9"/>
+                                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                                </svg>
+                            </div>
+                            <h3 class="font-bold text-slate-800 mb-2">แก้ไขข้อมูลพื้นฐาน</h3>
+                            <p class="text-sm text-slate-500 mb-6">คุณสามารถเพิ่มรถคันใหม่ หรือลบข้อมูลรถที่ไม่ได้ใช้งานแล้วออกจากระบบได้ที่นี่</p>
+                            
+                            <a href="manage_car.html" class="inline-flex items-center justify-center gap-2 w-full bg-emerald-800 hover:bg-emerald-600 text-white py-4 rounded-xl font-bold transition-all shadow-md hover:shadow-lg active:scale-[0.98]">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M5 12h14"/><path d="M12 5v14"/>
+                                </svg>
+                                เพิ่ม-ลบ ข้อมูลยานพาหนะ
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </main>
+
+<script>
+    const { createClient } = supabase;
+    const supabaseUrl = "https://ufglhklqraqudlxkylzw.supabase.co";
+    const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmZ2xoa2xxcmFxdWRseGt5bHp3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY5NTY2MzUsImV4cCI6MjA4MjUzMjYzNX0._WxWgfvgonGFmQlXfLOSuKH4QqS6sWF3GOxnNPW6si8";
+    const supabaseClient = createClient(supabaseUrl, supabaseKey);
+    
+    let emissionFactorsMap = {}; 
+    let vehicleDataList = []; 
+
+    async function initData() {
+        try {
+            const { data: cars, error: carError } = await supabaseClient
+                .from('data_scope1_car')
+                .select('car_registration, brand, car_type, agencies, fleet')
+                .order('car_registration', { ascending: true });
+
+            if (carError) throw carError;
+
+            vehicleDataList = cars || [];
+            const vehicleSelect = document.getElementById('vehicle_reg');
+            if (cars && cars.length > 0) {
+                vehicleSelect.innerHTML = '<option value="">เลือกเลขทะเบียนรถ</option>';
+                cars.forEach(car => {
+                    vehicleSelect.innerHTML += `<option value="${car.car_registration}">${car.car_registration}</option>`;
+                });
+            } else {
+                vehicleSelect.innerHTML = '<option value="">ไม่พบข้อมูลทะเบียนรถ</option>';
+            }
+
+            vehicleSelect.addEventListener('change', (e) => {
+                const selectedReg = e.target.value;
+                const carInfo = vehicleDataList.find(c => c.car_registration === selectedReg);
+                
+                if (carInfo) {
+                    document.getElementById('brand_model').value = carInfo.brand || '';
+                    document.getElementById('department').value = carInfo.agencies || '';
+                    document.getElementById('vehicle_type').value = carInfo.car_type || '';
+                    document.getElementById('fleet').value = carInfo.fleet|| '';
+                } else {
+                    document.getElementById('brand_model').value = '';
+                    document.getElementById('department').value = '';
+                    document.getElementById('vehicle_type').value = '';
+                    document.getElementById('fleet').value = '';
+                }
+            });
+
+            const { data: efs } = await supabaseClient
+                .from('emission_factors')
+                .select('fuel_name, co2, ch4, n2o, total_co2eq')
+                .or('category.eq.Mobile Combustion On-road');
+
+            if (efs) {
+                const select = document.getElementById('fuel_type');
+                select.innerHTML = '<option value="">เลือกเชื้อเพลิง</option>';
+                efs.forEach(f => {
+                    emissionFactorsMap[f.fuel_name] = { 
+                        co2: f.co2 || 0, 
+                        ch4: f.ch4 || 0, 
+                        n2o: f.n2o || 0, 
+                        total_co2eq: f.total_co2eq || 0 
+                    };
+                    select.innerHTML += `<option value="${f.fuel_name}">${f.fuel_name}</option>`;
+                });
+            }
+        } catch (err) { 
+            console.error("Initialization Error:", err);
+        }
+    }
+
+    async function uploadToStorage(file, folder = 'scope1_vehicle') {
+        if (!file) return null;
+        try {
+            const fileExt = file.name.split('.').pop();
+            const fileName = `veh_${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+            const filePath = `${folder}/${fileName}`; 
+            const { error: uploadError } = await supabaseClient.storage.from('images').upload(filePath, file);
+            if (uploadError) throw uploadError;
+            const { data: urlData } = supabaseClient.storage.from('images').getPublicUrl(filePath);
+            return urlData.publicUrl;
+        } catch (err) { return null; }
+    }
+
+    document.getElementById('dataForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const saveBtn = document.getElementById('saveBtn');
+        const spinner = document.getElementById('spinner');
+        const btnLabel = document.getElementById('btnLabel');
+
+        saveBtn.disabled = true; spinner.classList.remove('hidden'); btnLabel.textContent = "กำลังบันทึก...";
+
+        try {
+            const vehicleReg = document.getElementById('vehicle_reg').value;
+            const brandModel = document.getElementById('brand_model').value;
+            const vehicleType = document.getElementById('vehicle_type').value;
+            const department = document.getElementById('department').value;
+            const monthRecord = document.getElementById('month_record').value;
+            const fuel = document.getElementById('fuel_type').value;
+            const vol = parseFloat(document.getElementById('volume').value) || 0;
+            const fuelFile = document.getElementById('fuel_file').files[0];
+            const fillDate = document.getElementById('fill_date').value; 
+            const taxInvoice = document.getElementById('tax_invoice').value; 
+
+            const fuelUrl = await uploadToStorage(fuelFile, 'scope1_vehicle');
+            const factors = emissionFactorsMap[fuel] || { co2: 0, ch4: 0, n2o: 0, total_co2eq: 0 };
+            
+            const payload = {
+                car_registration: vehicleReg,
+                car_type: vehicleType,       
+                agencies: department,        
+                brand: brandModel,
+                month: monthRecord,   
+                date_fill: fillDate,          
+                fuel_type: fuel,    
+                vol_fill: vol,
+                ef_co2: factors.co2,
+                ef_ch4: factors.ch4,
+                ef_n2o: factors.n2o,
+                ef: factors.total_co2eq,
+                total_co2: vol * factors.co2, 
+                total_ch4: vol * factors.ch4, 
+                total_n2o: vol * factors.n2o,
+                total_ef: vol * factors.total_co2eq, 
+                file_url: fuelUrl,
+                tax_invoice: taxInvoice,
+            };
+            
+            const { error } = await supabaseClient.from('scope1_car').insert([payload]);
+            if (error) throw error;
+
+            const MAKE_WEBHOOK_URL = "https://hook.eu2.make.com/vrq2poljim3g9ehvx7x6lgh6ngkqa5kc"; 
+            const webhookBody = {
+                type: 'vehicle_entry',
+                scope1_data: payload,
+                timestamp: new Date().toISOString()
+            };
+
+            if (MAKE_WEBHOOK_URL) {
+                try {
+                    await fetch(MAKE_WEBHOOK_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(webhookBody)
+                    });
+                } catch (webhookError) {
+                    console.error("Webhook error:", webhookError);
+                }
+            }
+
+            document.getElementById('successAlert').classList.remove('hidden');
+            document.getElementById('dataForm').reset();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            setTimeout(() => { document.getElementById('successAlert').classList.add('hidden'); }, 5000);
+
+        } catch (err) { 
+            console.error(err);
+            alert("เกิดข้อผิดพลาด: " + err.message); 
+        } finally { 
+            saveBtn.disabled = false; spinner.classList.add('hidden'); btnLabel.textContent = "บันทึกข้อมูล"; 
+        }
+    });
+
+    window.addEventListener('DOMContentLoaded', initData);
+</script>
+</body>
+</html>
